@@ -5,25 +5,40 @@ from datetime import datetime
 import cv2
 import math
 
+pictures = []
+all_speeds = []
+camera = Camera()
+
+def take_photo(num, intr):
+    # camera.capture_sequence("img", num_images=num, interval=intr)
+    for x in range(num):
+        pictures.append(f"photo-{(x+1):02d}.jpg")
+
+    """
+camera.capture_sequence("img", num_images=num, interval=intr)
+for x in range(num):
+pictures.append(f"img-{(x+1):02d}.jpg")
+"""
+
 def get_time(image):
     with open(image, 'rb') as image_file:
         img = Image(image_file)
-        time_str = img.get("datetime_original")
+        time_str = img.get("datetime_original") or img.get("datetime")
         time = datetime.strptime(time_str, '%Y:%m:%d %H:%M:%S')
         return time
-    
+
 def get_time_diff(image_1, image_2):
     time_1 = get_time(image_1)
     time_2 = get_time(image_2)
     time_diff = time_2 - time_1
     return time_diff.seconds
-    
+
 def convert_to_cv(image_1, image_2):
     image_1_cv = cv2.imread(image_1,0)
     image_2_cv = cv2.imread(image_2,0)
     return image_1_cv, image_2_cv
 
-def calculate_features(image_1, image_2, feature_number):
+def calculate_features(image_1_cv, image_2_cv, feature_number):
     orb = cv2.ORB_create(nfeatures = feature_number)
     keypoints_1, descriptors_1 = orb.detectAndCompute(image_1_cv, None)
     keypoints_2, descriptors_2 = orb.detectAndCompute(image_2_cv, None)
@@ -43,13 +58,13 @@ def display_matches(image_1_cv, keypoints_1, image_2_cv, keypoints_2, matches):
     cv2.imshow('matches', resize)
     cv2.waitKey(0)
     cv2.destroyWindow('matches')
-    
+
 def find_matching_coords(keypoints_1, keypoints_2, matches):
     coords_1 = []
     coords_2 = []
     for match in matches:
         image_1_idx = match.queryIdx
-        image_2_idx = match.queryIdx
+        image_2_idx = match.trainIdx
         (x1, y1) = keypoints_1[image_1_idx].pt
         (x2, y2) = keypoints_2[image_2_idx].pt
         coords_1.append((x1, y1))
@@ -59,6 +74,8 @@ def find_matching_coords(keypoints_1, keypoints_2, matches):
 def calculate_mean_distance(coords_1, coords_2):
     all_distances = 0
     merged_coordinates = list(zip(coords_1, coords_2))
+    if not merged_coordinates:
+        return 0
     for coords in merged_coordinates:
         x_distance = coords[0][0] - coords[1][0]
         y_distance = coords[0][1] - coords[1][1]
@@ -70,28 +87,31 @@ def calculate_speed_in_kmps(feature_distance, GSD, time_difference):
     distance = feature_distance * GSD / 100000
     speed = distance / time_difference
     return speed
-    
 
-## MAIN FUNC:
+def calculate_good_avg_speed(all_speeds):
+    size = len(all_speeds)
+    suma = 0.0
+    for speed in all_speeds:
+        suma += float(speed)
+    return "{:.4f}".format(suma/size)
 
-image_1 = 'photos/photo_264_53246178065_o.jpg'
-image_2 = 'photos/photo_265_53246044109_o.jpg'
+take_photo(49,4)
 
-time_diff = get_time_diff(image_1, image_2)
-image_1_cv, image_2_cv = convert_to_cv(image_1, image_2)
-keypoints_1, keypoints_2, descriptors_1, descriptors_2 = calculate_features(image_1_cv, image_2_cv,1000)
-matches = calculate_matches(descriptors_1, descriptors_2)
-# display_matches(image_1_cv, keypoints_1, image_2_cv, keypoints_2, matches)
-coords_1, coords_2 = find_matching_coords(keypoints_1, keypoints_2, matches)
-average_feature_distance = calculate_mean_distance(coords_1, coords_2)
-speed = calculate_speed_in_kmps(average_feature_distance, 12648, time_diff)
-print(speed)
+for x in range(len(pictures)-1):
+    image_1 = pictures[x]
+    image_2 = pictures[x+1]
+    time_diff = get_time_diff(image_1, image_2)
+    image_1_cv, image_2_cv = convert_to_cv(image_1, image_2)
+    keypoints_1, keypoints_2, descriptors_1, descriptors_2 = calculate_features(image_1_cv, image_2_cv,500)
+    matches = calculate_matches(descriptors_1, descriptors_2)
+    # display_matches(image_1_cv, keypoints_1, image_2_cv, keypoints_2, matches)
+    coords_1, coords_2 = find_matching_coords(keypoints_1, keypoints_2, matches)
+    average_feature_distance = calculate_mean_distance(coords_1, coords_2)
+    speed = "{:.4f}".format(calculate_speed_in_kmps(average_feature_distance, 12648, time_diff))
+    all_speeds.append(speed)
 
-# robienie ZDJESSCCC
-"""
-camera = Camera()
-for i in range(10):
-	camera.take_photo(f"tlo{i}.jpg")
-	sleep(1)
-"""
-
+output_string = calculate_good_avg_speed(all_speeds)
+file_path = "result.txt"
+with open(file_path, 'w') as file:
+    file.write(output_string)
+print("Data written to", file_path)
