@@ -95,20 +95,22 @@ def calculate_good_avg_speed(all_speeds):
         suma += float(speed)
     return "{:.4f}".format(suma/size)
 
-take_photo(20,4)
+take_photo(24,2.5)
 
 for x in range(len(pictures)-1):
     image_1 = pictures[x]
     image_2 = pictures[x+1]
     time_diff = get_time_diff(image_1, image_2)
     image_1_cv, image_2_cv = convert_to_cv(image_1, image_2)
-    keypoints_1, keypoints_2, descriptors_1, descriptors_2 = calculate_features(image_1_cv, image_2_cv,500)
+    keypoints_1, keypoints_2, descriptors_1, descriptors_2 = calculate_features(image_1_cv, image_2_cv,100)
     matches = calculate_matches(descriptors_1, descriptors_2)
     # display_matches(image_1_cv, keypoints_1, image_2_cv, keypoints_2, matches)
     coords_1, coords_2 = find_matching_coords(keypoints_1, keypoints_2, matches)
     average_feature_distance = calculate_mean_distance(coords_1, coords_2)
     speed = "{:.4f}".format(calculate_speed_in_kmps(average_feature_distance, 12648, time_diff))
     all_speeds.append(speed)
+
+print(all_speeds)
 
 output_string = calculate_good_avg_speed(all_speeds)
 file_path = "result.txt"
