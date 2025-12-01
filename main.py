@@ -4,7 +4,7 @@ from exif import Image
 from datetime import datetime
 import cv2
 import math
-            
+            #zov
 def get_time(image):
     with open(image, 'rb') as image_file:
         img = Image(image_file)
