@@ -10,11 +10,11 @@ all_speeds = []
 camera = Camera()
 
 def take_photo(num, intr):
-    # camera.capture_sequence("img", num_images=num, interval=intr)
+    camera.capture_sequence("img", num_images=num, interval=intr)
     for x in range(num):
-        pictures.append(f"photo-{(x+1):02d}.jpg")
+        pictures.append(f"img-{(x+1):02d}.jpg")
 
-    """
+"""
 camera.capture_sequence("img", num_images=num, interval=intr)
 for x in range(num):
 pictures.append(f"img-{(x+1):02d}.jpg")
@@ -95,7 +95,7 @@ def calculate_good_avg_speed(all_speeds):
         suma += float(speed)
     return "{:.4f}".format(suma/size)
 
-take_photo(49,4)
+take_photo(20,4)
 
 for x in range(len(pictures)-1):
     image_1 = pictures[x]
