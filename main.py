@@ -8,17 +8,13 @@ import math
 pictures = []
 all_speeds = []
 camera = Camera()
-
+NofMatches = 500
 def take_photo(num, intr):
     camera.capture_sequence("img", num_images=num, interval=intr)
     for x in range(num):
         pictures.append(f"img-{(x+1):02d}.jpg")
 
-"""
-camera.capture_sequence("img", num_images=num, interval=intr)
-for x in range(num):
-pictures.append(f"img-{(x+1):02d}.jpg")
-"""
+
 
 def get_time(image):
     with open(image, 'rb') as image_file:
@@ -53,8 +49,8 @@ def calculate_matches(descriptors_1, descriptors_2):
     return matches
 
 def display_matches(image_1_cv, keypoints_1, image_2_cv, keypoints_2, matches):
-    match_img = cv2.drawMatches(image_1_cv, keypoints_1, image_2_cv, keypoints_2, matches[:100], None)
-    resize = cv2.resize(match_img, (1600, 600), interpolation = cv2.INTER_AREA)
+    match_img = cv2.drawMatches(image_1_cv, keypoints_1, image_2_cv, keypoints_2, matches[:NofMatches], None)
+    resize = cv2.resize(match_img, (1600, 1600), interpolation = cv2.INTER_AREA)
     cv2.imshow('matches', resize)
     cv2.waitKey(0)
     cv2.destroyWindow('matches')
@@ -95,19 +91,19 @@ def calculate_good_avg_speed(all_speeds):
         suma += float(speed)
     return "{:.4f}".format(suma/size)
 
-take_photo(24,2.5)
+take_photo(15,4)
 
 for x in range(len(pictures)-1):
     image_1 = pictures[x]
     image_2 = pictures[x+1]
     time_diff = get_time_diff(image_1, image_2)
     image_1_cv, image_2_cv = convert_to_cv(image_1, image_2)
-    keypoints_1, keypoints_2, descriptors_1, descriptors_2 = calculate_features(image_1_cv, image_2_cv,100)
+    keypoints_1, keypoints_2, descriptors_1, descriptors_2 = calculate_features(image_1_cv, image_2_cv, NofMatches)
     matches = calculate_matches(descriptors_1, descriptors_2)
     # display_matches(image_1_cv, keypoints_1, image_2_cv, keypoints_2, matches)
     coords_1, coords_2 = find_matching_coords(keypoints_1, keypoints_2, matches)
     average_feature_distance = calculate_mean_distance(coords_1, coords_2)
-    speed = "{:.4f}".format(calculate_speed_in_kmps(average_feature_distance, 1031, time_diff))#12648
+    speed = "{:.4f}".format(calculate_speed_in_kmps(average_feature_distance, 12648, time_diff))
     all_speeds.append(speed)
 
 print(all_speeds)
