@@ -107,7 +107,7 @@ for x in range(len(pictures)-1):
     # display_matches(image_1_cv, keypoints_1, image_2_cv, keypoints_2, matches)
     coords_1, coords_2 = find_matching_coords(keypoints_1, keypoints_2, matches)
     average_feature_distance = calculate_mean_distance(coords_1, coords_2)
-    speed = "{:.4f}".format(calculate_speed_in_kmps(average_feature_distance, 12648, time_diff))
+    speed = "{:.4f}".format(calculate_speed_in_kmps(average_feature_distance, 1031, time_diff))#12648
     all_speeds.append(speed)
 
 print(all_speeds)
